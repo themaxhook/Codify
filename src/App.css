@@ -1,0 +1,203 @@
+:root {
+    --bg-black: #0d0d0d;
+    --bg-dull: #121212;
+    --panel-dark: #141414;
+
+    --nvidia-green: #76b900;
+
+    --text-main: #e6e6e6;
+    --text-muted: #a0a0a0;
+
+    --border-white: #ffffff;
+    --danger-red: #e53935;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* //home */
+
+.homePageWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: var(--bg-black);
+    color: var(--text-main);
+}
+
+.formWrapper {
+    background: var(--panel-dark);
+    padding: 30px;
+    border-radius: 12px;
+    width: 420px;
+    max-width: 90%;
+}
+
+.homePageLogo {
+    height: 170px;
+    margin-bottom: 25px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mainLabel {
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputBox {
+    padding: 12px;
+    border-radius: 6px;
+    outline: none;
+    margin-bottom: 16px;
+    background: transparent;
+    border: 1.5px solid var(--border-white);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.inputBox::placeholder {
+    color: #b0b0b0;
+}
+
+.inputBox:focus {
+    border-color: var(--nvidia-green);
+}
+
+.btn {
+    border: none;
+    padding: 10px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.joinBtn {
+    background: var(--nvidia-green);
+    color: white;
+    width: 120px;
+    margin-left: auto;
+}
+
+.leaveBtn {
+    background: var(--danger-red);
+    color: white;
+    width: 100%;
+    margin-top: 20px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.copyBtn {
+    background: var(--nvidia-green);
+    color: white;
+    margin-top: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.createInfo {
+    margin: 0 auto;
+    margin-top: 22px;
+    color: var(--text-muted);
+}
+
+.createNewBtn {
+    color: var(--nvidia-green);
+    text-decoration: none;
+    border-bottom: 1px solid var(--nvidia-green);
+}
+
+/* //editor */
+
+.mainWrap {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    background: var(--bg-black);
+}
+
+.aside {
+    background: #0d0d0d;
+    padding: 18px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #1f1f1f;
+}
+
+.asideInner {
+    flex: 1;
+    background: #0d0d0d;
+}
+
+.logo {
+    border-bottom: 1px solid #1f1f1f;
+    padding-bottom: 12px;
+    margin-bottom: 10px;
+}
+
+.logoImage {
+    height: 170px;
+}
+
+.clientsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.client {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    font-weight: bold;
+}
+
+.userName {
+    margin-top: 8px;
+    color: #ffffff;
+}
+
+.editorWrap {
+    background: #ffffff;
+}
+
+.CodeMirror {
+    min-height: calc(100vh - 20px);
+    font-size: 20px;
+    line-height: 1.6;
+    padding-top: 20px;
+    background: #121212 !important;
+    color: #ffffff !important;
+}
+
+.CodeMirror-gutters {
+    background: #121212 !important;
+    border-right: none !important;
+}
+
+.CodeMirror-linenumber {
+    color: #ffffff !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 2px solid #ffffff !important;
+    animation: blinkCursor 1s steps(1) infinite;
+}
+
+@keyframes blinkCursor {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
