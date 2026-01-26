@@ -1,0 +1,427 @@
+:root {
+    --bg-black: #0d0d0d;
+    --bg-dull: #121212;
+    --panel-dark: #141414;
+
+    --nvidia-green: #76b900;
+
+    --text-main: #e6e6e6;
+    --text-muted: #a0a0a0;
+
+    --border-white: #ffffff;
+    --danger-red: #e53935;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* //home */
+
+.homePageWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    background: var(--bg-black);
+    color: var(--text-main);
+}
+
+.formWrapper {
+    background: var(--panel-dark);
+    padding: 30px;
+    border-radius: 12px;
+    width: 420px;
+    max-width: 90%;
+}
+
+.homePageLogo {
+    height: 170px;
+    margin-bottom: 25px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.mainLabel {
+    margin-bottom: 20px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputBox {
+    padding: 12px;
+    border-radius: 6px;
+    outline: none;
+    margin-bottom: 16px;
+    background: transparent;
+    border: 1.5px solid var(--border-white);
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.inputBox::placeholder {
+    color: #b0b0b0;
+}
+
+.inputBox:focus {
+    border-color: var(--nvidia-green);
+}
+
+.btn {
+    border: none;
+    padding: 10px 8px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.joinBtn {
+    background: var(--nvidia-green);
+    color: white;
+    width: 120px;
+    margin-left: auto;
+}
+
+.leaveBtn {
+    background: var(--danger-red);
+    color: white;
+    width: 100%;
+    margin-top: 20px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.copyBtn {
+    background: var(--nvidia-green);
+    color: white;
+    margin-top: 10px;
+    padding: 8px 10px;
+    font-size: 14px;
+}
+
+.createInfo {
+    margin: 0 auto;
+    margin-top: 22px;
+    color: var(--text-muted);
+}
+
+.createNewBtn {
+    color: var(--nvidia-green);
+    text-decoration: none;
+    border-bottom: 1px solid var(--nvidia-green);
+}
+
+/* //editor */
+
+.mainWrap {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    background: var(--bg-black);
+    height: 100vh;
+}
+
+.aside {
+    background: #0d0d0d;
+    padding: 18px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid #1f1f1f;
+}
+
+.asideInner {
+    flex: 1;
+    background: #0d0d0d;
+}
+
+.logo {
+    border-bottom: 1px solid #1f1f1f;
+    padding-bottom: 12px;
+    margin-bottom: 10px;
+}
+
+.logoImage {
+    height: 170px;
+}
+
+.clientsList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.client {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    font-weight: bold;
+}
+
+.userName {
+    margin-top: 8px;
+    color: #ffffff;
+}
+
+.editorWrap {
+    background: #121212;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.editorTopBar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 12px;
+    background: #0f0f0f;
+    border-bottom: 1px solid #1f1f1f;
+    color: var(--text-main);
+}
+
+.editorTopBarSide {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.editorTopBarSide.right {
+    justify-content: flex-end;
+}
+
+.editorTopBarCenter {
+    display: flex;
+    justify-content: center;
+}
+
+.topBarLabel {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 70px;
+}
+
+.languageSelect {
+    width: 100%;
+    max-width: 420px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: #141414;
+    border: 1px solid #2a2a2a;
+    color: var(--text-main);
+    outline: none;
+}
+
+.languageSelect:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.runBtn {
+    background: var(--nvidia-green);
+    color: white;
+    min-width: 140px;
+    padding: 10px 14px;
+}
+
+.dangerBtn {
+    background: var(--danger-red);
+    color: white;
+}
+
+.editorArea {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.CodeMirror {
+    height: 100%;
+    font-size: 20px;
+    line-height: 1.6;
+    padding-top: 20px;
+    background: #121212 !important;
+    color: #ffffff !important;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.CodeMirror-scroll {
+    height: 100% !important;
+}
+
+/* hide the backing textarea to avoid it affecting layout */
+#realtimeEditor {
+    display: none;
+}
+
+.CodeMirror-gutters {
+    background: #121212 !important;
+    border-right: none !important;
+}
+
+.CodeMirror-linenumber {
+    color: #ffffff !important;
+}
+
+.CodeMirror-cursor {
+    border-left: 2px solid #ffffff !important;
+    animation: blinkCursor 1s steps(1) infinite;
+}
+
+@keyframes blinkCursor {
+    0% { opacity: 1; }
+    50% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+/* Output panel */
+.outputPanel {
+    background: #0f0f0f;
+    border-top: 1px solid #1f1f1f;
+    color: var(--text-main);
+}
+
+.outputPanel.closed .outputPanelBody {
+    display: none;
+}
+
+.outputPanelHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+}
+
+.outputToggleBtn {
+    background: #1a1a1a;
+    color: var(--text-main);
+    border: 1px solid #2a2a2a;
+}
+
+.outputStatus {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.statusDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    background: #666;
+    flex: 0 0 auto;
+}
+
+.statusDot.polling,
+.statusDot.creating {
+    background: var(--nvidia-green);
+}
+
+.statusDot.done {
+    background: #4aed88;
+}
+
+.statusDot.error {
+    background: var(--danger-red);
+}
+
+.statusDot.cancelled {
+    background: #888;
+}
+
+.statusText {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.statusMeta {
+    color: var(--text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.outputActions {
+    display: flex;
+    gap: 10px;
+}
+
+.outputPanelBody {
+    padding: 12px;
+    max-height: 40vh;
+    overflow: auto;
+}
+
+.outputGrid {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 12px;
+}
+
+.outputBlock {
+    background: #141414;
+    border: 1px solid #1f1f1f;
+    border-radius: 10px;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.outputBlockTitle {
+    padding: 10px 12px;
+    border-bottom: 1px solid #1f1f1f;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+}
+
+.stdinBox {
+    width: 100%;
+    min-height: 120px;
+    resize: vertical;
+    padding: 10px 12px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-main);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+}
+
+.terminal {
+    margin: 0;
+    padding: 12px;
+    background: transparent;
+    color: var(--text-main);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 200px;
+}
+
+.terminalError {
+    color: #ffb4b4;
+}
+
+@media (max-width: 980px) {
+    .outputGrid {
+        grid-template-columns: 1fr;
+    }
+}
