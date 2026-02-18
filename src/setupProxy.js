@@ -30,4 +30,9 @@ module.exports = function (app) {
     );
 };
 
-
+//setupProxy.js is a development-only file that tells React how to forward API requests to your backend server.
+// Frontend → localhost:3000/api/run
+//         ↓
+// Proxy redirects
+//         ↓
+// Backend → localhost:7000/api/run

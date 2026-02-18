@@ -16,3 +16,13 @@ export const initSocket = async () => {
 
   return io(url, options);
 };
+//This file is responsible for connecting your website to the backend in real-time.
+// Your frontend (React) = You
+
+// Your backend (Node server) = Your friend
+
+// initSocket() = Making a phone call
+
+// socket.id = Your call ID
+
+// this file is responsible to make live connection like phone call bw frontend and backend
