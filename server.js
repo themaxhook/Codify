@@ -11,7 +11,7 @@ const ACTIONS = require('./src/Actions');
 const server = http.createServer(app);//creating a http server bcz socket.io must connected to http server
 const io = new Server(server, {
     cors: {
-        origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+        origin: process.env.CLIENT_ORIGIN || '*',
         methods: ['GET', 'POST'],
     },
 });//Socket.io instance attached to a http server, with CORS configuration to allow connection from frontend origin
@@ -19,7 +19,7 @@ const io = new Server(server, {
 // Allow React dev server (3000) to call backend APIs (7000) without proxy.
 app.use(
     cors({
-        origin: process.env.CLIENT_ORIGIN || 'http://localhost:3000',
+        origin: process.env.CLIENT_ORIGIN || '*',
         credentials: true,
     })
 );
@@ -30,7 +30,7 @@ app.use(express.json({ limit: '1mb' }));
  * OneCompiler via RapidAPI proxy (keeps UI simple + keeps API key off the browser)
  * Docs: https://rapidapi.com/onecompiler/api/onecompiler-apis
  */
-const RAPIDAPI_KEY = process.env.ONECOMPILER_ACCESS_TOKEN || process.env.RAPIDAPI_KEY || '90baf05c21msh725a289891fd416p1a666cjsne82eb5a76fe6';
+const RAPIDAPI_KEY = process.env.ONECOMPILER_ACCESS_TOKEN || process.env.RAPIDAPI_KEY;
 const RAPIDAPI_HOST = 'onecompiler-apis.p.rapidapi.com';
 
 if (!RAPIDAPI_KEY) {
@@ -64,9 +64,6 @@ app.get('/api/onecompiler/languages', async (req, res) => {
             return res.json(oneCompilerLanguagesCache.data);
         }
 
-        // OneCompiler languages list is available via their public endpoint.
-        // RapidAPI does NOT provide /api/v1/languages (it returns 404).
-        // Source: https://onecompiler.com/apis/code-execution
         const r = await fetch(`https://onecompiler.com/api/v1/languages`, {
             headers: { 'Content-Type': 'application/json' },
         });
@@ -153,7 +150,7 @@ app.post('/api/onecompiler/run', async (req, res) => {
 const userSocketMap = {};
 function getAllConnectedClients(roomId) {
     // Map
-    return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(//io.sockets.adapter.rooms.get(roomId) this gives set{socketId1, socketId2, socketId3}  Array.from(...) converts set to Array
+    return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
         (socketId) => {
             return {
                 socketId,
@@ -181,7 +178,6 @@ io.on('connection', (socket) => {//This runs every time a new user connects via 
 
     socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
         socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });//here socket.in sends code to all everyone except sender if we use io.to it will sends to all includes senders too and create uneccesary re-render
-
     });
 
     socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {//whenever new user joins they need current code state , so flow is existing user sends full code to server , then server sends it to only new user joined,  new user get latest code instantly
@@ -203,6 +199,14 @@ io.on('connection', (socket) => {//This runs every time a new user connects via 
     });
 });
 
+/* ================= PRODUCTION STATIC SERVING ================= */
+// Serve React build in production
+app.use(express.static(path.join(__dirname, 'build')));
+
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
+/* ============================================================= */
 
 const PORT = process.env.PORT || 7000;
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
