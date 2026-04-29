@@ -69,6 +69,15 @@ const EditorPage = () => {
                 }
             );
 
+            socketRef.current.on(ACTIONS.ROOM_STATE, ({ code }) => {
+    // New user receives current room code directly from Redis via server
+    // Update the editor with the latest code
+    if (editorInstanceRef.current) {
+        editorInstanceRef.current.setValue(code);
+    }
+    codeRef.current = code;
+});
+
             // Listening for disconnected
             socketRef.current.on(
                 ACTIONS.DISCONNECTED,
@@ -87,6 +96,7 @@ const EditorPage = () => {
             socketRef.current.disconnect();
             socketRef.current.off(ACTIONS.JOINED);
             socketRef.current.off(ACTIONS.DISCONNECTED);
+            socketRef.current.off(ACTIONS.ROOM_STATE);
         };
     }, []);
 

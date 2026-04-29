@@ -5,6 +5,7 @@ const ACTIONS = {
     CODE_CHANGE: 'code-change',
     SYNC_CODE: 'sync-code',
     LEAVE: 'leave',
+    ROOM_STATE: 'room-state',  
 };
-//It is a file that stores all your socket event names in one place.
+//All your socket event names in one place.
 module.exports = ACTIONS;

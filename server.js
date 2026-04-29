@@ -2,53 +2,81 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const path = require('path');
-const fs = require('fs');
 const cors = require('cors');
 require('dotenv').config();
 const { Server } = require('socket.io');
+const Redis = require('ioredis');
 const ACTIONS = require('./src/Actions');
 
-const server = http.createServer(app);//creating a http server bcz socket.io must connected to http server
+const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: process.env.CLIENT_ORIGIN || '*',
         methods: ['GET', 'POST'],
     },
-});//Socket.io instance attached to a http server, with CORS configuration to allow connection from frontend origin
+});
 
-// Allow React dev server (3000) to call backend APIs (7000) without proxy.
-app.use(
-    cors({
-        origin: process.env.CLIENT_ORIGIN || '*',
-        credentials: true,
-    })
-);
-
+app.use(cors({
+    origin: process.env.CLIENT_ORIGIN || '*',
+    credentials: true,
+}));
 app.use(express.json({ limit: '1mb' }));
 
 const onecompilerRouter = require('./routes/onecompiler');
 app.use('/api/onecompiler', onecompilerRouter);
 
+// ─── REDIS SETUP ────────────────────────────────────────────────
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+
+redis.on('connect', () => console.log('Redis connected ✅'));
+redis.on('error', (err) => console.error('Redis error:', err));
+// ────────────────────────────────────────────────────────────────
+
 const userSocketMap = {};
+
+// ─── QUEUE SYSTEM ───────────────────────────────────────────────
+// One queue per room. Each queue is an array of pending code changes.
+// isProcessing flag ensures only one change is processed at a time per room.
+const roomQueues = {};       // { roomId: [code, code, ...] }
+const isProcessing = {};     // { roomId: true/false }
+
+// Updated queue — stores { code, socketId } instead of just code
+async function processQueue(roomId) {
+    if (isProcessing[roomId]) return;
+    isProcessing[roomId] = true;
+
+    while (roomQueues[roomId] && roomQueues[roomId].length > 0) {
+        const { code, socketId } = roomQueues[roomId].shift(); // ← destructure
+
+        await redis.set(`room:${roomId}:code`, code);
+
+        // Send to everyone in room EXCEPT the person who sent it
+        io.to(roomId).except(socketId).emit(ACTIONS.CODE_CHANGE, { code }); // ← fixed
+    }
+
+    isProcessing[roomId] = false;
+}
+// ────────────────────────────────────────────────────────────────
+
 function getAllConnectedClients(roomId) {
-    // Map
     return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map(
-        (socketId) => {
-            return {
-                socketId,
-                username: userSocketMap[socketId],
-            };
-        }
+        (socketId) => ({
+            socketId,
+            username: userSocketMap[socketId],
+        })
     );
 }
 
-io.on('connection', (socket) => {//This runs every time a new user connects via WebSocket.
+io.on('connection', (socket) => {
     console.log('socket connected', socket.id);
 
-    socket.on(ACTIONS.JOIN, ({ roomId, username }) => {
+    socket.on(ACTIONS.JOIN, async ({ roomId, username }) => {
         userSocketMap[socket.id] = username;
         socket.join(roomId);
+
         const clients = getAllConnectedClients(roomId);
+
+        // Notify everyone in the room someone joined
         clients.forEach(({ socketId }) => {
             io.to(socketId).emit(ACTIONS.JOINED, {
                 clients,
@@ -56,17 +84,35 @@ io.on('connection', (socket) => {//This runs every time a new user connects via 
                 socketId: socket.id,
             });
         });
+
+        // ── NEW: Send current code from Redis to the new user ──
+        // This replaces the old SYNC_CODE approach.
+        // We get the code directly from Redis, not from another user.
+        const savedCode = await redis.get(`room:${roomId}:code`);
+        if (savedCode !== null) {
+            socket.emit(ACTIONS.ROOM_STATE, { code: savedCode });
+        }
+        // ───────────────────────────────────────────────────────
     });
 
-    socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
-        socket.in(roomId).emit(ACTIONS.CODE_CHANGE, { code });//here socket.in sends code to all everyone except sender if we use io.to it will sends to all includes senders too and create uneccesary re-render
-    });
+    // ── NEW: Queue-based CODE_CHANGE ──────────────────────────
+   socket.on(ACTIONS.CODE_CHANGE, ({ roomId, code }) => {
+    if (!roomQueues[roomId]) roomQueues[roomId] = [];
 
-    socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {//whenever new user joins they need current code state , so flow is existing user sends full code to server , then server sends it to only new user joined,  new user get latest code instantly
+    // Push both code AND socketId so processQueue knows who sent it
+    roomQueues[roomId].push({ code, socketId: socket.id }); // ← updated
+
+    processQueue(roomId);
+});
+    // ─────────────────────────────────────────────────────────
+
+    // SYNC_CODE kept for backward compatibility but
+    // new users now get code via ROOM_STATE from Redis
+    socket.on(ACTIONS.SYNC_CODE, ({ socketId, code }) => {
         io.to(socketId).emit(ACTIONS.CODE_CHANGE, { code });
     });
 
-    socket.on('disconnecting', () => {// this runs when socket fully disconnects.
+    socket.on('disconnecting', () => {
         const rooms = [...socket.rooms];
         rooms.forEach((roomId) => {
             socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
@@ -75,20 +121,14 @@ io.on('connection', (socket) => {//This runs every time a new user connects via 
             });
         });
         delete userSocketMap[socket.id];
-        // but but but when a socket(user) disconnects Socket.io automatically remove it from all rooms
-        //Socket.IO is a JavaScript library that enables real-time, bidirectional communication between client and server.
-        socket.leave();//remove socket from room
+        socket.leave();
     });
 });
 
-/* ================= PRODUCTION STATIC SERVING ================= */
-// Serve React build in production
 app.use(express.static(path.join(__dirname, 'build')));
-
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
-/* ============================================================= */
 
 const PORT = process.env.PORT || 7000;
 server.listen(PORT, () => console.log(`Listening on port ${PORT}`));
