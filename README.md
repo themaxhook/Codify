@@ -228,9 +228,3 @@ Render Redis       → managed Redis instance
 - Persistent document saving (MongoDB)
 - CRDT-based conflict resolution (Yjs) for true offline support
 - Redis Adapter for horizontal scaling across multiple servers
-
----
-
-## License
-
-MIT
