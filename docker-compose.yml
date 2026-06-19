@@ -1,22 +1,18 @@
+version: '3.8'
 services:
   codify-client:
-    build:
-      context: .
-      dockerfile: Dockerfile.client
+    image: maxhook/codify-client:latest
     container_name: codify-client
     restart: unless-stopped
     networks:
       - proxy-network
 
   codify-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
+    image: maxhook/codify-server:latest
     container_name: codify-server
     restart: unless-stopped
     environment:
       - PORT=4000
-      # Tells Node.js to connect to the Redis container we define below
       - REDIS_URL=redis://redis:6379
     networks:
       - proxy-network
@@ -26,7 +22,6 @@ services:
     image: redis:alpine
     container_name: codify-redis
     restart: unless-stopped
-    # No ports exposed! It is 100% hidden from the internet
     networks:
       - codify-internal
 
@@ -34,14 +29,3 @@ networks:
   proxy-network:
     external: true
   codify-internal:
-    # A private network just for Codify's backend architecture
-
-
-    version: '3.8'
-services:
-  web:
-    image: maxhook/codify:latest
-    ports:
-      - "3000:3000"
-    restart: always
-    # Add other configuration like volumes or environment variables here
