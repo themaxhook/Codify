@@ -1,0 +1,26 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH into server and deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Change this folder name for each project!
+            cd ~/projects/REPLACE_ME_WITH_FOLDER_NAME
+            
+            # Pull the latest code
+            git pull origin main
+            
+            # Rebuild and restart the Docker containers
+            docker compose up -d --build
