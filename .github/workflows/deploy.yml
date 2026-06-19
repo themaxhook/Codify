@@ -17,7 +17,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             # Change this folder name for each project!
-            cd ~/projects/REPLACE_ME_WITH_FOLDER_NAME
+            cd ~/projects/codify
             
             # Pull the latest code
             git pull origin main
