@@ -35,3 +35,13 @@ networks:
     external: true
   codify-internal:
     # A private network just for Codify's backend architecture
+
+
+    version: '3.8'
+services:
+  web:
+    image: maxhook/codify:latest
+    ports:
+      - "3000:3000"
+    restart: always
+    # Add other configuration like volumes or environment variables here
