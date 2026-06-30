@@ -36,6 +36,9 @@ const EditorPage = () => {
     const [outputOpen, setOutputOpen] = useState(true);
     const [exec, setExec] = useState({ phase: 'idle', result: null, error: null });
 
+    // NEW: tracks whether a save request is currently in flight
+    const [saving, setSaving] = useState(false);
+
     useEffect(() => {
         const init = async () => {
             socketRef.current = await initSocket();
@@ -157,6 +160,40 @@ const EditorPage = () => {
         reactNavigator('/');
     }
 
+    // NEW: saves the current room code permanently to MongoDB via
+    // POST /api/room/save. This is separate from Redis — Redis holds
+    // the live session state, this is the user explicitly persisting it.
+    async function saveRoom() {
+        const code = editorInstanceRef.current?.getValue?.() ?? codeRef.current ?? '';
+
+        if (!code.trim()) {
+            toast.error('Nothing to save');
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const res = await fetch('/api/room/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomId,
+                    code,
+                    language: selectedLanguage?.id || 'javascript',
+                }),
+            });
+
+            if (!res.ok) throw new Error('Save failed');
+
+            toast.success('Room saved!');
+        } catch (err) {
+            console.error(err);
+            toast.error('Could not save room');
+        } finally {
+            setSaving(false);
+        }
+    }
+
     if (!location.state) {
         return <Navigate to="/" />;
     }
@@ -224,6 +261,9 @@ const EditorPage = () => {
                 </div>
                 <button className="btn copyBtn" onClick={copyRoomId}>
                     Copy ROOM ID
+                </button>
+                <button className="btn saveBtn" onClick={saveRoom} disabled={saving}>
+                    {saving ? 'Saving…' : 'Save Room'}
                 </button>
                 <button className="btn leaveBtn" onClick={leaveRoom}>
                     Leave
