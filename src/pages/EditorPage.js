@@ -18,6 +18,7 @@ import {
 } from 'react-router-dom';
 
 const EditorPage = () => {
+    const hasRoomCodeRef = useRef(false);
     const socketRef = useRef(null);
     const codeRef = useRef(null);
     const editorInstanceRef = useRef(null);
@@ -86,7 +87,7 @@ const EditorPage = () => {
                 // Mark that ROOM_STATE has been applied so language
                 // template useEffect doesn't overwrite this code
                 roomStateAppliedRef.current = true;
-
+                 hasRoomCodeRef.current = true; 
                 // If editor already ready → set immediately
                 if (editorInstanceRef.current) {
                     editorInstanceRef.current.setValue(code);
@@ -168,7 +169,7 @@ const EditorPage = () => {
                 codeRef.current = support.template;
                 lastAutoTemplateRef.current = support.template;
             }
-        }, 500);
+        }, 2000);
 
         return () => clearTimeout(timer);
     }, [selectedLanguage]);
