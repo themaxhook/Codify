@@ -22,6 +22,9 @@ const EditorPage = () => {
     const codeRef = useRef(null);
     const editorInstanceRef = useRef(null);
     const lastAutoTemplateRef = useRef('');
+    // Tracks whether ROOM_STATE has been applied so language
+    // template doesn't overwrite the restored room code
+    const roomStateAppliedRef = useRef(false);
     const location = useLocation();
     const { roomId } = useParams();
     const reactNavigator = useNavigate();
@@ -36,7 +39,7 @@ const EditorPage = () => {
     const [outputOpen, setOutputOpen] = useState(true);
     const [exec, setExec] = useState({ phase: 'idle', result: null, error: null });
 
-    // NEW: tracks whether a save request is currently in flight
+    // tracks whether a save request is currently in flight
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -50,6 +53,9 @@ const EditorPage = () => {
                 toast.error('Socket connection failed, try again later.');
                 reactNavigator('/');
             }
+
+            // Reset BEFORE joining so fresh join always starts clean
+            roomStateAppliedRef.current = false;
 
             socketRef.current.emit(ACTIONS.JOIN, {
                 roomId,
@@ -73,13 +79,21 @@ const EditorPage = () => {
             );
 
             socketRef.current.on(ACTIONS.ROOM_STATE, ({ code }) => {
-    // New user receives current room code directly from Redis via server
-    // Update the editor with the latest code
-    if (editorInstanceRef.current) {
-        editorInstanceRef.current.setValue(code);
-    }
-    codeRef.current = code;
-});
+                // New user receives current room code directly from Redis via server
+                // Store in ref first regardless of editor state
+                codeRef.current = code;
+
+                // Mark that ROOM_STATE has been applied so language
+                // template useEffect doesn't overwrite this code
+                roomStateAppliedRef.current = true;
+
+                // If editor already ready → set immediately
+                if (editorInstanceRef.current) {
+                    editorInstanceRef.current.setValue(code);
+                }
+                // If editor not ready yet → onEditorReady will handle it
+                // by reading codeRef.current when editor initializes
+            });
 
             // Listening for disconnected
             socketRef.current.on(
@@ -134,16 +148,29 @@ const EditorPage = () => {
         const support = guessSupportFromOneCompilerLanguage(selectedLanguage);
         setLanguageMode(support.mode);
 
-        const currentCode = editorInstanceRef.current?.getValue?.() ?? codeRef.current ?? '';
-        const canReplaceBecauseItWasAutoInserted =
-            currentCode === lastAutoTemplateRef.current && Boolean(lastAutoTemplateRef.current);
+        // If ROOM_STATE already applied don't overwrite room code
+        if (roomStateAppliedRef.current) return;
 
-        if ((!currentCode?.trim() || canReplaceBecauseItWasAutoInserted) && support.template) {
-            // Insert template if editor is empty OR if it still contains the last auto-inserted template.
-            editorInstanceRef.current?.setValue?.(support.template);
-            codeRef.current = support.template;
-            lastAutoTemplateRef.current = support.template;
-        }
+        // Small delay to let ROOM_STATE arrive first before
+        // deciding whether to insert the language template
+        const timer = setTimeout(() => {
+            // Check again after delay — ROOM_STATE may have
+            // arrived during the 500ms wait
+            if (roomStateAppliedRef.current) return;
+
+            const currentCode = editorInstanceRef.current?.getValue?.() ?? codeRef.current ?? '';
+            const canReplaceBecauseItWasAutoInserted =
+                currentCode === lastAutoTemplateRef.current && Boolean(lastAutoTemplateRef.current);
+
+            if ((!currentCode?.trim() || canReplaceBecauseItWasAutoInserted) && support.template) {
+                // Insert template only if editor is empty AND no room code arrived
+                editorInstanceRef.current?.setValue?.(support.template);
+                codeRef.current = support.template;
+                lastAutoTemplateRef.current = support.template;
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
     }, [selectedLanguage]);
 
     async function copyRoomId() {
@@ -160,7 +187,7 @@ const EditorPage = () => {
         reactNavigator('/');
     }
 
-    // NEW: saves the current room code permanently to MongoDB via
+    // saves the current room code permanently to MongoDB via
     // POST /api/room/save. This is separate from Redis — Redis holds
     // the live session state, this is the user explicitly persisting it.
     async function saveRoom() {
@@ -323,6 +350,11 @@ const EditorPage = () => {
                         }}
                         onEditorReady={(cm) => {
                             editorInstanceRef.current = cm;
+                            // If ROOM_STATE already arrived before editor was ready
+                            // apply the stored code now so it's never lost
+                            if (codeRef.current) {
+                                cm.setValue(codeRef.current);
+                            }
                         }}
                     />
                 </div>
